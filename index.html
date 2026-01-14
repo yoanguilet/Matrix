@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impact Study Results Summary</title>
+    <!-- html2canvas library for PNG export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -47,8 +49,13 @@
             transition: background-color 0.2s ease;
         }
 
-        .export-btn:hover {
+        .export-btn:hover:not(:disabled) {
             background-color: #005530;
+        }
+
+        .export-btn:disabled {
+            background-color: #88b89e;
+            cursor: wait;
         }
 
         .export-btn svg {
@@ -59,6 +66,13 @@
         .toolbar-label {
             color: #666;
             font-size: 13px;
+        }
+
+        #export-content {
+            background-color: #fff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
@@ -235,6 +249,7 @@
         </button>
     </div>
 
+    <div id="export-content">
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -366,5 +381,46 @@
             Advocates for Immigrant Rights&nbsp;&nbsp;|&nbsp;&nbsp;6
         </div>
     </footer>
+    </div>
+
+    <script>
+        document.querySelector('.export-btn').addEventListener('click', function() {
+            const exportContent = document.getElementById('export-content');
+            const button = this;
+
+            // Change button text to show loading
+            const originalText = button.innerHTML;
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                Exporting...
+            `;
+            button.disabled = true;
+
+            html2canvas(exportContent, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false
+            }).then(function(canvas) {
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'impact-study-results.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }).catch(function(error) {
+                console.error('Export failed:', error);
+                alert('Export failed. Please try again.');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });
+    </script>
 </body>
 </html>
