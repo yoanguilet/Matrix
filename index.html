@@ -1,4 +1,427 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Study Results Summary</title>
+    <!-- html2canvas library for PNG export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 50px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #006B3F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .export-btn:hover:not(:disabled) {
+            background-color: #005530;
+        }
+
+        .export-btn:disabled {
+            background-color: #88b89e;
+            cursor: wait;
+        }
+
+        .export-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .toolbar-label {
+            color: #666;
+            font-size: 13px;
+        }
+
+        #export-content {
+            background-color: #fff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px 50px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .header-label {
+            color: #006B3F;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Title */
+        .main-title {
+            color: #006B3F;
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        /* Results Table */
+        .results-table {
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Column Headers */
+        .column-headers {
+            display: grid;
+            grid-template-columns: 150px 250px repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .column-headers .spacer {
+            grid-column: span 2;
+        }
+
+        .column-header {
+            text-align: center;
+            color: #006B3F;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 5px;
+        }
+
+        /* Result Row */
+        .result-row {
+            display: grid;
+            grid-template-columns: 150px 250px repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+            min-height: 110px;
+        }
+
+        /* Category Cell */
+        .category-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            background-color: #f0f0f0;
+            gap: 8px;
+        }
+
+        .icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background-color: #006B3F;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .icon-wrapper svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .category-name {
+            color: #006B3F;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* Description Cell */
+        .description-cell {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: #f0f0f0;
+            color: #006B3F;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Rating Cells */
+        .rating-cell {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+        }
+
+        .rating-cell.filled {
+            background-color: #006B3F;
+            border: 1px solid #006B3F;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 3px solid #006B3F;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .logo-main {
+            font-size: 26px;
+            font-weight: 700;
+            color: #333;
+            letter-spacing: -1px;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: #006B3F;
+            margin-left: 22px;
+            margin-top: 2px;
+        }
+
+        .footer-right {
+            color: #006B3F;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <span class="toolbar-label">Export:</span>
+        <button class="export-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export PNG
+        </button>
+    </div>
+
+    <div id="export-content">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="header-label">IMPACT STUDY RESULTS</span>
+        </div>
+
+        <!-- Main Title -->
+        <h1 class="main-title">Impact study results summary</h1>
+
+        <!-- Results Table -->
+        <div class="results-table">
+            <!-- Column Headers -->
+            <div class="column-headers">
+                <div class="spacer"></div>
+                <div class="column-header">Weak</div>
+                <div class="column-header">Neutral</div>
+                <div class="column-header">Strong</div>
+                <div class="column-header">Very Strong</div>
+            </div>
+
+            <!-- Row 1: Benefit-Cost Ratio -->
+            <div class="result-row">
+                <div class="category-cell">
+                    <div class="icon-wrapper">
+                        <!-- Chart with trend line icon -->
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="4" y="20" width="4" height="8" fill="white" rx="0.5"/>
+                            <rect x="10" y="16" width="4" height="12" fill="white" rx="0.5"/>
+                            <rect x="16" y="12" width="4" height="16" fill="white" rx="0.5"/>
+                            <rect x="22" y="8" width="4" height="20" fill="white" rx="0.5"/>
+                            <path d="M6 18 L12 13 L18 15 L24 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 8 L25 7 L25 11" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="category-name">Benefit-Cost<br>Ratio</span>
+                </div>
+                <div class="description-cell">
+                    Magnitude of benefits created for participants relative to the costs to produce those benefits
+                </div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell filled"></div>
+            </div>
+
+            <!-- Row 2: Use of Best Practices -->
+            <div class="result-row">
+                <div class="category-cell">
+                    <div class="icon-wrapper">
+                        <!-- Stacked papers/documents icon -->
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <rect x="6" y="6" width="20" height="4" rx="1" fill="white"/>
+                            <rect x="6" y="12" width="20" height="4" rx="1" fill="white"/>
+                            <rect x="6" y="18" width="20" height="4" rx="1" fill="white"/>
+                            <line x1="9" y1="8" x2="23" y2="8" stroke="#006B3F" stroke-width="1"/>
+                            <line x1="9" y1="14" x2="23" y2="14" stroke="#006B3F" stroke-width="1"/>
+                            <line x1="9" y1="20" x2="23" y2="20" stroke="#006B3F" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <span class="category-name">Use of Best<br>Practices</span>
+                </div>
+                <div class="description-cell">
+                    Efficacy of program design and implementation to achieve the intended participant outcomes
+                </div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell filled"></div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell"></div>
+            </div>
+
+            <!-- Row 3: Measurement Infrastructure -->
+            <div class="result-row">
+                <div class="category-cell">
+                    <div class="icon-wrapper">
+                        <!-- Magnifying glass icon -->
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <circle cx="13" cy="13" r="8" stroke="white" stroke-width="3" fill="none"/>
+                            <line x1="19" y1="19" x2="27" y2="27" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="category-name">Measurement<br>Infrastructure</span>
+                </div>
+                <div class="description-cell">
+                    Ability of data practices to measure how well the intended outcomes are achieved
+                </div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell filled"></div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell"></div>
+            </div>
+
+            <!-- Row 4: System Collaborations -->
+            <div class="result-row">
+                <div class="category-cell">
+                    <div class="icon-wrapper">
+                        <!-- Connected nodes/network icon -->
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="8" r="4" fill="white"/>
+                            <circle cx="8" cy="20" r="4" fill="white"/>
+                            <circle cx="24" cy="20" r="4" fill="white"/>
+                            <circle cx="16" cy="24" r="4" fill="white"/>
+                            <line x1="16" y1="12" x2="16" y2="20" stroke="white" stroke-width="2"/>
+                            <line x1="13" y1="10" x2="10" y2="17" stroke="white" stroke-width="2"/>
+                            <line x1="19" y1="10" x2="22" y2="17" stroke="white" stroke-width="2"/>
+                            <line x1="11" y1="22" x2="13" y2="23" stroke="white" stroke-width="2"/>
+                            <line x1="21" y1="22" x2="19" y2="23" stroke="white" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <span class="category-name">System<br>Collaborations</span>
+                </div>
+                <div class="description-cell">
+                    Efficacy of processes used to connect participants with other organizations to receive additional benefits
+                </div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell filled"></div>
+                <div class="rating-cell"></div>
+                <div class="rating-cell"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="logo">
+            <span class="logo-main">slingshot</span>
+            <span class="logo-sub">Memphis</span>
+        </div>
+        <div class="footer-right">
+            Advocates for Immigrant Rights&nbsp;&nbsp;|&nbsp;&nbsp;6
+        </div>
+    </footer>
+    </div>
+
+    <script>
+        document.querySelector('.export-btn').addEventListener('click', function() {
+            const exportContent = document.getElementById('export-content');
+            const button = this;
+
+            // Change button text to show loading
+            const originalText = button.innerHTML;
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                Exporting...
+            `;
+            button.disabled = true;
+
+            html2canvas(exportContent, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false
+            }).then(function(canvas) {
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'impact-study-results.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }).catch(function(error) {
+                console.error('Export failed:', error);
+                alert('Export failed. Please try again.');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });
+    </script>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
