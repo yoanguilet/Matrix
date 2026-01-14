@@ -68,6 +68,61 @@
             font-size: 13px;
         }
 
+        /* Color Picker */
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 20px;
+            padding-right: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .color-picker::-moz-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .hex-input {
+            width: 90px;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .hex-input:focus {
+            outline: none;
+            border-color: #006B3F;
+        }
+
         #export-content {
             background-color: #fff;
             flex: 1;
@@ -238,6 +293,13 @@
 <body>
     <!-- Toolbar -->
     <div class="toolbar">
+        <div class="color-picker-group">
+            <span class="toolbar-label">Theme Color:</span>
+            <div class="color-input-wrapper">
+                <input type="color" id="colorPicker" class="color-picker" value="#006B3F">
+                <input type="text" id="hexInput" class="hex-input" value="#006B3F" maxlength="7" placeholder="#000000">
+            </div>
+        </div>
         <span class="toolbar-label">Export:</span>
         <button class="export-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -384,6 +446,59 @@
     </div>
 
     <script>
+        // Color Picker functionality
+        const colorPicker = document.getElementById('colorPicker');
+        const hexInput = document.getElementById('hexInput');
+
+        function isValidHex(hex) {
+            return /^#[0-9A-Fa-f]{6}$/.test(hex);
+        }
+
+        function updateThemeColor(color) {
+            // Update icon wrappers (dimension logos)
+            document.querySelectorAll('.icon-wrapper').forEach(el => {
+                el.style.backgroundColor = color;
+            });
+
+            // Update filled rating cells
+            document.querySelectorAll('.rating-cell.filled').forEach(el => {
+                el.style.backgroundColor = color;
+                el.style.borderColor = color;
+            });
+        }
+
+        // Color picker change
+        colorPicker.addEventListener('input', function() {
+            const color = this.value;
+            hexInput.value = color.toUpperCase();
+            updateThemeColor(color);
+        });
+
+        // Hex input change
+        hexInput.addEventListener('input', function() {
+            let value = this.value;
+
+            // Add # if not present
+            if (value && !value.startsWith('#')) {
+                value = '#' + value;
+                this.value = value;
+            }
+
+            // Update color picker and theme if valid
+            if (isValidHex(value)) {
+                colorPicker.value = value;
+                updateThemeColor(value);
+            }
+        });
+
+        // Validate on blur
+        hexInput.addEventListener('blur', function() {
+            if (!isValidHex(this.value)) {
+                this.value = colorPicker.value.toUpperCase();
+            }
+        });
+
+        // Export PNG functionality
         document.querySelector('.export-btn').addEventListener('click', function() {
             const exportContent = document.getElementById('export-content');
             const button = this;
