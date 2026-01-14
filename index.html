@@ -68,6 +68,61 @@
             font-size: 13px;
         }
 
+        /* Color Picker */
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 20px;
+            padding-right: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .color-picker::-moz-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .hex-input {
+            width: 90px;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .hex-input:focus {
+            outline: none;
+            border-color: #006B3F;
+        }
+
         #export-content {
             background-color: #fff;
             flex: 1;
@@ -238,6 +293,13 @@
 <body>
     <!-- Toolbar -->
     <div class="toolbar">
+        <div class="color-picker-group">
+            <span class="toolbar-label">Theme Color:</span>
+            <div class="color-input-wrapper">
+                <input type="color" id="colorPicker" class="color-picker" value="#006B3F">
+                <input type="text" id="hexInput" class="hex-input" value="#006B3F" maxlength="7" placeholder="#000000">
+            </div>
+        </div>
         <span class="toolbar-label">Export:</span>
         <button class="export-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -384,6 +446,59 @@
     </div>
 
     <script>
+        // Color Picker functionality
+        const colorPicker = document.getElementById('colorPicker');
+        const hexInput = document.getElementById('hexInput');
+
+        function isValidHex(hex) {
+            return /^#[0-9A-Fa-f]{6}$/.test(hex);
+        }
+
+        function updateThemeColor(color) {
+            // Update icon wrappers (dimension logos)
+            document.querySelectorAll('.icon-wrapper').forEach(el => {
+                el.style.backgroundColor = color;
+            });
+
+            // Update filled rating cells
+            document.querySelectorAll('.rating-cell.filled').forEach(el => {
+                el.style.backgroundColor = color;
+                el.style.borderColor = color;
+            });
+        }
+
+        // Color picker change
+        colorPicker.addEventListener('input', function() {
+            const color = this.value;
+            hexInput.value = color.toUpperCase();
+            updateThemeColor(color);
+        });
+
+        // Hex input change
+        hexInput.addEventListener('input', function() {
+            let value = this.value;
+
+            // Add # if not present
+            if (value && !value.startsWith('#')) {
+                value = '#' + value;
+                this.value = value;
+            }
+
+            // Update color picker and theme if valid
+            if (isValidHex(value)) {
+                colorPicker.value = value;
+                updateThemeColor(value);
+            }
+        });
+
+        // Validate on blur
+        hexInput.addEventListener('blur', function() {
+            if (!isValidHex(this.value)) {
+                this.value = colorPicker.value.toUpperCase();
+            }
+        });
+
+        // Export PNG functionality
         document.querySelector('.export-btn').addEventListener('click', function() {
             const exportContent = document.getElementById('export-content');
             const button = this;
@@ -422,119 +537,5 @@
             });
         });
     </script>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrix - Tableau avec Export</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Bibliothèques pour l'export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</head>
-<body>
-    <!-- Barre latérale d'export -->
-    <aside class="sidebar">
-        <h2 class="sidebar-title">Options d'export</h2>
-        <div class="export-buttons">
-            <button id="export-png" class="export-btn export-png">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <path d="M21 15l-5-5L5 21"/>
-                </svg>
-                Exporter en PNG
-            </button>
-            <button id="export-pdf" class="export-btn export-pdf">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                    <polyline points="10 9 9 9 8 9"/>
-                </svg>
-                Exporter en PDF
-            </button>
-        </div>
-    </aside>
-
-    <!-- Contenu principal avec le tableau -->
-    <main class="main-content">
-        <h1>Matrix - Tableau de Données</h1>
-
-        <div id="table-container" class="table-container">
-            <table id="data-table" class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Département</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Jean Dupont</td>
-                        <td>jean.dupont@email.com</td>
-                        <td>Marketing</td>
-                        <td><span class="status status-active">Actif</span></td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Marie Martin</td>
-                        <td>marie.martin@email.com</td>
-                        <td>Développement</td>
-                        <td><span class="status status-active">Actif</span></td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Pierre Bernard</td>
-                        <td>pierre.bernard@email.com</td>
-                        <td>RH</td>
-                        <td><span class="status status-inactive">Inactif</span></td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>Sophie Petit</td>
-                        <td>sophie.petit@email.com</td>
-                        <td>Finance</td>
-                        <td><span class="status status-active">Actif</span></td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Lucas Moreau</td>
-                        <td>lucas.moreau@email.com</td>
-                        <td>Développement</td>
-                        <td><span class="status status-pending">En attente</span></td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td>Emma Leroy</td>
-                        <td>emma.leroy@email.com</td>
-                        <td>Marketing</td>
-                        <td><span class="status status-active">Actif</span></td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td>Hugo Roux</td>
-                        <td>hugo.roux@email.com</td>
-                        <td>Support</td>
-                        <td><span class="status status-active">Actif</span></td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td>Chloé Fournier</td>
-                        <td>chloe.fournier@email.com</td>
-                        <td>Finance</td>
-                        <td><span class="status status-inactive">Inactif</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
-
-    <script src="export.js"></script>
 </body>
 </html>
